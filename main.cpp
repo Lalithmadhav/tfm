@@ -3,8 +3,9 @@
 int main() {
     FileManager fm;
     while(true) {
-        fm.display();
-        if (!fm.request()) break;
+        auto entries = fm.list();
+        fm.display(entries);
+        if (!fm.request(entries)) break;
         std::cout << "\n";
     }
     std::cout << "Exiting File Manager" << "\n";
