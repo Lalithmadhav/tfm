@@ -11,8 +11,9 @@ namespace fs = std::filesystem;
 class FileManager {
 private:
     fs::path current_path;
-    bool isValid(const int idx, const int esize) {
-        return idx >= 0 && idx < esize;
+    int selected = 0;
+    bool isValidDirectory(const int idx, const std::vector<fs::path>& entries) {
+        return idx >= 0 && idx < entries.size() && fs::is_directory(entries[idx]);
     }
 
 public: 
@@ -36,17 +37,19 @@ public:
             return true;
         }
         int idx = std::stoi(s);
-        if (!isValid(idx, entries.size())) {
-            std::cout << "Not Valid" << "\n";
+        if (!isValidDirectory(idx, entries)) {
+            std::cout << "Not a Directory" << "\n";
         } else current_path = entries[idx];
         return true;
     }
     
     void display(const std::vector<fs::path>& entries) {
-        std::cout << "Current Directory : " << current_path<< "\n\n";
+        std::cout << "Current Directory : " << current_path<< "\n";
+        std::cout << "Selected : " << selected << "\n\n";
         int idx = 0;
         for (auto& entry : entries) {
-            std::cout << idx++ << (fs::is_directory(entry) ? " [D] " : " [F] ")<< entry.filename() << "\n";
+            std::cout << (idx == selected ? ">" : " ") << (fs::is_directory(entry) ? " [D] " : " [F] ")<< entry.filename() << "\n";
+                    idx++;
         }
     }
 };
