@@ -4,42 +4,50 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 
 class FileManager {
 private:
     fs::path current_path;
-    bool isValid(const std::string& s) {
-        fs::path dpath = current_path/s;
-        return fs::exists(dpath) && fs::is_directory(dpath);
-    }
-
-    void list() {
-        for (const auto& dir_entry : fs::directory_iterator(current_path)) {
-            std::cout << (fs::is_directory(dir_entry) ? "[D]" : "[F]")
-                      << " " 
-                      << dir_entry.path().filename()
-                      << "\n";
-        }
+    bool isValid(const int idx, const int esize) {
+        return idx >= 0 && idx < esize;
     }
 
 public: 
+    std::vector<fs::path>list() {
+        std::vector<fs::path> entries;
+        for (const auto& dir_entry : fs::directory_iterator(current_path)) {
+            entries.push_back(dir_entry.path());
+        }
+        return entries;
+    }
+
     FileManager() : current_path(fs::current_path()) {};
-    bool request() {
-        std::cout << "Enter q to quit or a directory : ";
+
+    bool request(const std::vector<fs::path>& entries) {
+        std::cout << "Enter q to quit or a number: ";
         std::string s;
         if (!getline(std::cin >> std::ws, s)) return false;
         if (s == "q") return false;
-        if (!isValid(s)) {
+        if (s == "..") {
+            current_path = (current_path/s).lexically_normal();
+            return true;
+        }
+        int idx = std::stoi(s);
+        if (!isValid(idx, entries.size())) {
             std::cout << "Not Valid" << "\n";
-        } else current_path = (current_path/s).lexically_normal();
+        } else current_path = entries[idx];
         return true;
     }
     
-    void display() {
+    void display(const std::vector<fs::path>& entries) {
         std::cout << "Current Directory : " << current_path<< "\n\n";
-        list();
+        int idx = 0;
+        for (auto& entry : entries) {
+            std::cout << idx++ << (fs::is_directory(entry) ? " [D] " : " [F] ")<< entry.filename() << "\n";
+        }
     }
 };
 
