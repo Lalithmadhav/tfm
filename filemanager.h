@@ -43,6 +43,10 @@ public:
                 getch();
             }
         }
+        else if (key == KEY_BACKSPACE) {
+            current_path = (current_path/"..").lexically_normal();
+            selected = 0;
+        }
         return true;;
     }
     
