@@ -14,7 +14,7 @@ private:
     fs::path current_path;
     int selected = 0;
     bool isValidDirectory(const int idx, const std::vector<fs::path>& entries) {
-        return idx >= 0 && idx < entries.size() && fs::is_directory(entries[idx]);
+        return fs::is_directory(entries[idx]);
     }
 
 public: 
@@ -33,11 +33,20 @@ public:
         if (key == KEY_UP && selected > 0) selected--;
         else if (key == KEY_DOWN && !entries.empty() && selected < entries.size()-1) selected++;
         else if (key == 'q') return false;
+        else if (key == 10) {
+            if (fs::is_directory(entries[selected])) {
+                current_path = entries[selected];
+                selected = 0;
+            }
+            else {
+                printw("Not a Directory");
+                getch();
+            }
+        }
         return true;;
     }
     
     void display(const std::vector<fs::path>& entries) {
-        clear();
         printw("Current Directory : %s\n", current_path.c_str());
         printw("Selected : %d\n\n", selected);
         int idx = 0;
@@ -47,7 +56,6 @@ public:
                                , entry.filename().c_str());
             idx++;
         }
-        refresh();
     }
 };
 
