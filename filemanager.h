@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <ncurses.h>
 
 namespace fs = std::filesystem;
 
@@ -28,29 +29,25 @@ public:
     FileManager() : current_path(fs::current_path()) {};
 
     bool request(const std::vector<fs::path>& entries) {
-        std::cout << "Enter q to quit or a number: ";
-        std::string s;
-        if (!getline(std::cin >> std::ws, s)) return false;
-        if (s == "q") return false;
-        if (s == "..") {
-            current_path = (current_path/s).lexically_normal();
-            return true;
-        }
-        int idx = std::stoi(s);
-        if (!isValidDirectory(idx, entries)) {
-            std::cout << "Not a Directory" << "\n";
-        } else current_path = entries[idx];
-        return true;
+        int key = getch();
+        if (key == KEY_UP && selected > 0) selected--;
+        else if (key == KEY_DOWN && !entries.empty() && selected < entries.size()-1) selected++;
+        else if (key == 'q') return false;
+        return true;;
     }
     
     void display(const std::vector<fs::path>& entries) {
-        std::cout << "Current Directory : " << current_path<< "\n";
-        std::cout << "Selected : " << selected << "\n\n";
+        clear();
+        printw("Current Directory : %s\n", current_path.c_str());
+        printw("Selected : %d\n\n", selected);
         int idx = 0;
         for (auto& entry : entries) {
-            std::cout << (idx == selected ? ">" : " ") << (fs::is_directory(entry) ? " [D] " : " [F] ")<< entry.filename() << "\n";
-                    idx++;
+            printw("%s %s %s\n", idx == selected ? ">" : " "
+                               , fs::is_directory(entry) ? " [D] " : " [F] "
+                               , entry.filename().c_str());
+            idx++;
         }
+        refresh();
     }
 };
 
