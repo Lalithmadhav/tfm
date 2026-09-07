@@ -33,8 +33,8 @@ public:
         if (key == KEY_UP && selected > 0) selected--;
         else if (key == KEY_DOWN && !entries.empty() && selected < entries.size()-1) selected++;
         else if (key == 'q') return false;
-        else if (key == 10) {
-            if (fs::is_directory(entries[selected])) {
+        else if ((key == '\n' || key == KEY_ENTER) && !entries.empty()) {
+            if (fs::is_directory(entries[selected]) && !fs::is_empty(entries[selected])) {
                 current_path = entries[selected];
                 selected = 0;
             }
