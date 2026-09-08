@@ -9,8 +9,8 @@ int main() {
         clear();
         auto entries = fm.list();
         fm.display(entries);
-        if (!fm.request(entries)) break;
         refresh();
+        if (!fm.request(entries)) break;
     }
     endwin();
     return 0;
