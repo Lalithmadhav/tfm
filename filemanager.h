@@ -1,6 +1,7 @@
 #ifndef FILEMANAGER_H
 #define FILEMANAGER_H
 
+#include <algorithm>
 #include <iostream>
 #include <filesystem>
 #include <string>
@@ -13,9 +14,7 @@ class FileManager {
 private:
     fs::path current_path;
     int selected = 0;
-    bool isValidDirectory(const int idx, const std::vector<fs::path>& entries) {
-        return fs::is_directory(entries[idx]);
-    }
+    int scroll_offset = 0;
 
 public: 
     std::vector<fs::path>list() {
@@ -33,8 +32,8 @@ public:
         if (key == KEY_UP && selected > 0) selected--;
         else if (key == KEY_DOWN && !entries.empty() && selected < entries.size()-1) selected++;
         else if (key == 'q') return false;
-        else if ((key == '\n' || key == KEY_ENTER) && !entries.empty()) {
-            if (fs::is_directory(entries[selected]) && !fs::is_empty(entries[selected])) {
+        else if (key == '\n' || key == KEY_ENTER) {
+            if (fs::is_directory(entries[selected]) && entries.size() > 0) {
                 current_path = entries[selected];
                 selected = 0;
             }
@@ -51,15 +50,21 @@ public:
     }
     
     void display(const std::vector<fs::path>& entries) {
-        printw("Current Directory : %s\n", current_path.c_str());
-        printw("Selected : %d\n\n", selected);
-        int idx = 0;
-        for (auto& entry : entries) {
-            printw("%s %s %s\n", idx == selected ? ">" : " "
+        int rows, cols;
+        getmaxyx(stdscr, rows, cols);
+        scroll_offset = std::max(0, selected - rows + 10);
+        mvprintw(0, 0, "Current Directory : %s", current_path.c_str());
+        mvprintw(1, 0, "----------------------------------------------");
+        for (int i = scroll_offset;i<std::min(scroll_offset + rows - 4, (int)entries.size());i++) {
+            auto& entry = entries[i];
+            mvprintw(2+i-scroll_offset, 0, "%s %s %s\n", i == selected ? ">" : " "
                                , fs::is_directory(entry) ? " [D] " : " [F] "
                                , entry.filename().c_str());
-            idx++;
         }
+        mvprintw(rows-1, 0, "^/v Navigate");
+        mvprintw(rows-1, 15, "Enter Open");
+        mvprintw(rows-1, 28, "BackSpace UP");
+        mvprintw(rows-1, 43, "q Quit");
     }
 };
 
