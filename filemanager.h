@@ -32,10 +32,25 @@ public:
         if (key == KEY_UP && selected > 0) selected--;
         else if (key == KEY_DOWN && !entries.empty() && selected < entries.size()-1) selected++;
         else if (key == 'q') return false;
+        else if (key == 'd') {
+            if (selected != -1 && !fs::is_directory(entries[selected])) {
+                fs::remove(entries[selected]);
+                if (selected == entries.size()-1) selected--;
+            }
+            else {
+                printw("Empty / Is Directory");
+                getch();
+            }
+        }
         else if (key == '\n' || key == KEY_ENTER) {
-            if (fs::is_directory(entries[selected]) && entries.size() > 0) {
+            if(selected == -1) {
+                printw("Empty Directory");
+                getch();
+            }
+            else if (fs::is_directory(entries[selected])) {
                 current_path = entries[selected];
-                selected = 0;
+                selected = (fs::is_empty(current_path) ? -1 : 0);
+                
             }
             else {
                 printw("Not a Directory");
@@ -54,6 +69,7 @@ public:
         getmaxyx(stdscr, rows, cols);
         scroll_offset = std::max(0, selected - rows + 10);
         mvprintw(0, 0, "Current Directory : %s", current_path.c_str());
+        mvprintw(0, 50, "Selected : %d", selected);
         mvprintw(1, 0, "----------------------------------------------");
         for (int i = scroll_offset;i<std::min(scroll_offset + rows - 4, (int)entries.size());i++) {
             auto& entry = entries[i];
