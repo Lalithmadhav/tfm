@@ -74,7 +74,19 @@ public:
             mvprintw(rows-2, 0, "New name : ");
             getnstr(newp, 20);
             noecho();
-            fs::rename(oldp, current_path/newp);
+            for (auto i : entries) {
+                if (i.filename() == newp) {
+                    mvprintw(rows-2, 0, "File already exists");
+                    getch();
+                    return true;
+                }
+            }
+            try {
+                fs::rename(oldp, current_path/newp);
+            } catch (fs::filesystem_error& e) {
+                mvprintw(rows-2, 0, "Invalid : %s", e.what());
+                getch();
+            }
         }
         return true;;
     }
