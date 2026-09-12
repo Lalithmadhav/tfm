@@ -2,6 +2,7 @@
 #define FILEMANAGER_H
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <filesystem>
 #include <string>
@@ -93,6 +94,26 @@ public:
                 mvprintw(rows-2, 0, "Invalid : %s", e.what());
                 getch();
             }
+        }
+        else if (key == 'm') {
+            char dirName[20];
+            mvprintw(rows-2, 0, "Directory Name : ");
+            echo();
+            getnstr(dirName, 19);
+            noecho();
+            if (dirName[0] == '\0') {
+                mvprintw(rows-2, 0, "Cannot name empty");
+                getch();
+                return true;
+            } 
+            for (auto& p : entries) {
+                if (p.filename() == dirName) {
+                    mvprintw(rows-2, 0, "Directory already exists.");
+                    getch();
+                    return 1;
+                }
+            }
+            fs::create_directory(current_path/dirName);
         }
         return true;;
     }
