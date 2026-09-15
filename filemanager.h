@@ -2,6 +2,7 @@
 #define FILEMANAGER_H
 
 #include <algorithm>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
@@ -17,6 +18,23 @@ private:
     int selected = 0;
     int scroll_offset = 0;
     int rows = -1, cols = -1;
+
+    int findPathIndex(const fs::path& toFindPath) {
+        auto entries = list();
+        for (int i = 0;i<entries.size();i++) if (entries[i] == toFindPath) return i;
+        return -1;
+    }
+
+    void goToAndClearLine(const int y, const int x) {
+        move(y, x);
+        clrtoeol();
+    }
+
+    void showMessage(const char* msg) {
+        goToAndClearLine(rows-2, 0);
+        printw("%s", msg);
+        getch();
+    }
 
 public: 
     std::vector<fs::path>list() {
@@ -40,14 +58,12 @@ public:
                 if (selected == entries.size()-1) selected--;
             }
             else {
-                mvprintw(rows - 2, 0, "Empty / Is Directory");
-                getch();
+                showMessage("Empty / Is Directory");
             }
         }
         else if (key == '\n' || key == KEY_ENTER) {
             if(selected == -1) {
-                mvprintw(rows - 2, 0,"Empty Directory");
-                getch();
+                showMessage("Empty Directory");
             }
             else if (fs::is_directory(entries[selected])) {
                 current_path = entries[selected];
@@ -55,8 +71,7 @@ public:
                 
             }
             else {
-                mvprintw(rows - 2, 0, "Not a Directory");
-                getch();
+                showMessage("Not a Directory");
             }
         }
         else if (key == KEY_BACKSPACE) {
@@ -65,55 +80,84 @@ public:
         }
         else if (key == 'r') {
             if (selected == -1) {
-                mvprintw(rows - 2, 0, "Invalid");
+                showMessage("Invalid");
                 return true;
             }
             fs::path oldp = entries[selected];
             char newp[20];
 
             echo();
-            mvprintw(rows-2, 0, "New name : ");
+            goToAndClearLine(rows-2, 0);
+            printw("New name : ");
             getnstr(newp, 20);
             noecho();
             if (newp[0] == '\0') {
-                mvprintw(rows-2, 0, "Cannot rename to empty");
-                getch();
+                showMessage("Cannot rename to empty");
                 return 1;
             }
 
             for (auto i : entries) {
                 if (i.filename() == newp) {
-                    mvprintw(rows-2, 0, "File already exists");
-                    getch();
+                    showMessage("File already exists");
                     return true;
                 }
             }
             try {
                 fs::rename(oldp, current_path/newp);
             } catch (const fs::filesystem_error& e) {
-                mvprintw(rows-2, 0, "Invalid : %s", e.what());
+                goToAndClearLine(rows-2, 0);
+                printw("Invalid : %s", e.what());
                 getch();
             }
         }
         else if (key == 'm') {
             char dirName[20];
-            mvprintw(rows-2, 0, "Directory Name : ");
+            goToAndClearLine(rows-2, 0);
+            printw("Directory Name : ");
             echo();
             getnstr(dirName, 19);
             noecho();
             if (dirName[0] == '\0') {
-                mvprintw(rows-2, 0, "Cannot name empty");
-                getch();
+                showMessage("Cannot name empty");
                 return true;
             } 
-            for (auto& p : entries) {
-                if (p.filename() == dirName) {
-                    mvprintw(rows-2, 0, "Directory already exists.");
-                    getch();
-                    return 1;
-                }
+            fs::path newPath = current_path/dirName;
+            if (fs::exists(newPath)) {
+                showMessage("Something already exists in this path.");
+                return 1;
             }
-            fs::create_directory(current_path/dirName);
+            try {
+                fs::create_directory(newPath);
+                selected = findPathIndex(newPath);
+            } catch (const fs::filesystem_error& e) {
+                goToAndClearLine(rows-2, 0);
+                printw("Invalid : %s", e.what());
+                getch();
+            }
+        }
+        else if (key == 'n') {
+            char fName[20];
+            goToAndClearLine(rows-2, 0);
+            printw("File Name : ");
+            echo();
+            getnstr(fName, 19);
+            noecho();
+            if (fName[0] == '\0') {
+                showMessage("Cannot name empty");
+                return true;
+            } 
+            fs::path newPath = current_path/fName;
+            if (fs::exists(newPath)) {
+                showMessage("Something already exists in this path.");
+                return 1;
+            }
+            std::ofstream file(newPath);
+            if (!file) {
+                showMessage("File not created.");
+            } else {
+                selected = findPathIndex(newPath);
+                showMessage("File created. ");
+            }
         }
         return true;;
     }
