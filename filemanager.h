@@ -36,6 +36,24 @@ private:
         getch();
     }
 
+    void preview(const fs::path& path) {
+        std::ifstream file(path);
+
+        std::string line;
+
+        initscr();
+        move(0,0);
+        clrtobot();
+        while (std::getline(file, line)) {
+            printw("%s\n", line.c_str());
+        }
+        while (true) {
+            char key = getch();
+            if (key == 'q') return;
+        }
+        endwin();
+    }
+
 public: 
     std::vector<fs::path>list() {
         std::vector<fs::path> entries;
@@ -71,7 +89,7 @@ public:
                 
             }
             else {
-                showMessage("Not a Directory");
+                preview(entries[selected]);
             }
         }
         else if (key == KEY_BACKSPACE) {
