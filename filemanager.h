@@ -41,17 +41,16 @@ private:
 
         std::string line;
 
-        initscr();
-        move(0,0);
-        clrtobot();
-        while (std::getline(file, line)) {
-            printw("%s\n", line.c_str());
+        clear();
+
+        int i = 0;
+        while (i < rows && std::getline(file, line)) {
+            mvprintw(i++, 0, "%s", line.c_str());
         }
         while (true) {
             char key = getch();
             if (key == 'q') return;
         }
-        endwin();
     }
 
 public: 
