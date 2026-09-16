@@ -47,6 +47,9 @@ private:
         while (i < rows && std::getline(file, line)) {
             mvprintw(i++, 0, "%s", line.c_str());
         }
+        
+        refresh();
+        
         while (true) {
             char key = getch();
             if (key == 'q') return;
