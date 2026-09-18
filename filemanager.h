@@ -40,19 +40,33 @@ private:
         std::ifstream file(path);
 
         std::string line;
+        std::vector<std::string> lines; 
 
-        clear();
-
-        int i = 0;
-        while (i < rows && std::getline(file, line)) {
-            mvprintw(i++, 0, "%s", line.c_str());
+        while (std::getline(file, line)) {
+            lines.push_back(line);
         }
-        
-        refresh();
+   
+        int visible_rows = rows-2;
+        if (lines.empty()) {
+            mvprintw(visible_rows, 0, "Empty File");
+            getch();
+            return;
+        }
+
+        int preview_scroll_offset = 0, preview_line = 0;
         
         while (true) {
-            char key = getch();
-            if (key == 'q') return;
+            clear();
+           for (int i = preview_scroll_offset;i < std::min((int)lines.size(), visible_rows + preview_scroll_offset);i++) {
+                mvprintw(i-preview_scroll_offset, 2,"%d %s",i,  lines[i].c_str());
+            }
+
+            refresh();
+            int key = getch();
+            if (key == KEY_DOWN && preview_line < lines.size()-1) preview_line++;
+            else if (key == KEY_UP && preview_line > 0) preview_line--;
+            else if (key == 'q') return;
+            preview_scroll_offset = std::max(0, preview_line - visible_rows + 5);
         }
     }
 
