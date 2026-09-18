@@ -65,6 +65,8 @@ private:
             int key = getch();
             if (key == KEY_DOWN && preview_line < lines.size()-1) preview_line++;
             else if (key == KEY_UP && preview_line > 0) preview_line--;
+            else if (key == KEY_PPAGE) preview_line = std::max(0, preview_line - visible_rows);
+            else if (key == KEY_NPAGE) preview_line = std::min((int)lines.size(), preview_line + visible_rows);
             else if (key == 'q') return;
             preview_scroll_offset = std::max(0, preview_line - visible_rows + 5);
         }
